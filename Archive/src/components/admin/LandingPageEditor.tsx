@@ -15,19 +15,51 @@ import { FaqEditor } from './editors/FaqEditor';
 import { FinalCtaEditor } from './editors/FinalCtaEditor';
 
 export const LandingPageEditor: React.FC = () => {
-  const { config, updateLandingPage, saveConfig } = useConfigStore();
+  const { config, updateLandingPage } = useConfigStore();
 
-  const handleSave = () => {
-    saveConfig();
-    toast.success('Changes saved successfully!', {
-      style: {
-        background: '#1B1B21',
-        color: '#D3D3DF',
-        border: '1px solid rgba(195, 58, 255, 0.2)',
-      },
-      duration: 2000,
-    });
+  const handleSave = async () => {
+    try {
+      const response = await fetch(`/api/landing-page`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config.landingPage),
+      });
+  
+      // Check if the response is valid JSON
+      const contentType = response.headers.get('Content-Type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Unexpected response: ${await response.text()}`);
+      }
+  
+      const result = await response.json();
+  
+      if (result.success) {
+        toast.success(`Landing Page updated successfully!`, {
+          style: {
+            background: '#1B1B21',
+            color: '#D3D3DF',
+            border: '1px solid rgba(195, 58, 255, 0.2)',
+          },
+          duration: 2000,
+        });
+      } else {
+        throw new Error(result.message || `Failed to update Landing Page`);
+      }
+    } catch (error) {
+      console.error('Error updating Landing Page:', error);
+      toast.error(`Error updating Landing Page: ${error.message}`, {
+        style: {
+          background: '#1B1B21',
+          color: '#D3D3DF',
+          border: '1px solid rgba(255, 58, 58, 0.2)',
+        },
+        duration: 2000,
+      });
+    }
   };
+  
 
   return (
     <div className="bg-[#1B1B21] rounded-lg shadow-lg p-6">

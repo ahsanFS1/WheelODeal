@@ -1,48 +1,55 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
-import { useAdminStore } from '../../store/adminStore';
 import { Button } from '../ui/button';
 import { Key } from 'lucide-react';
 import { toast } from 'sonner';
-import CryptoJS from 'crypto-js';
 
 export const LoginForm: React.FC = () => {
   const [secretKey, setSecretKey] = useState('');
   const [error, setError] = useState('');
-  const login = useAuthStore((state) => state.login);
-  const secretKeys = useAdminStore((state) => state.secretKeys);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const hashedKey = CryptoJS.SHA256(secretKey).toString();
-    const validKey = secretKeys.find(k => CryptoJS.SHA256(k.key).toString() === hashedKey);
+    try {
+      // Call backend to validate the secret key
+      const response = await fetch('/api/admin/keys/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secretKey }),
+      });
 
-    if (!validKey) {
-      setError('Wrong Secret Key');
-      return;
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.message || 'Invalid secret key');
+        return;
+      }
+
+      // Key is valid, extract plan and projectName
+      const { plan, projectName } = data.data;
+
+      const token = btoa(
+        JSON.stringify({
+          id: Date.now().toString(),
+          type: 'user',
+          name: 'User',
+          plan,
+          projectName,
+        })
+      );
+
+      // Save the token in session storage (or any other storage mechanism)
+      sessionStorage.setItem('userToken', token);
+
+      toast.success('Login successful!');
+      navigate('/user-dashboard');
+    } catch (err) {
+      console.error('Error validating secret key:', err);
+      setError('An error occurred. Please try again later.');
     }
-
-    // Check if key has expired
-    if (new Date(validKey.expiresAt) < new Date()) {
-      setError('This Secret Key has expired');
-      return;
-    }
-
-    const token = btoa(JSON.stringify({
-      id: CryptoJS.SHA256(Date.now().toString()).toString().substring(0, 8),
-      type: 'user',
-      name: 'User',
-      plan: validKey.plan,
-      projectName: validKey.projectName
-    }));
-
-    login(token, secretKey);
-    toast.success('Login successful!');
-    navigate('/user-dashboard');
   };
 
   return (
@@ -60,7 +67,9 @@ export const LoginForm: React.FC = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="secretKey" className="sr-only">Secret Key</label>
+            <label htmlFor="secretKey" className="sr-only">
+              Secret Key
+            </label>
             <input
               id="secretKey"
               type="password"
@@ -73,7 +82,9 @@ export const LoginForm: React.FC = () => {
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center font-medium">{error}</div>
+            <div className="text-red-500 text-sm text-center font-medium">
+              {error}
+            </div>
           )}
 
           <div>
@@ -89,3 +100,6 @@ export const LoginForm: React.FC = () => {
     </div>
   );
 };
+
+
+//

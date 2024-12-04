@@ -1,44 +1,79 @@
-import React, { useState } from 'react';
-import { useAdminStore } from '../../store/adminStore';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Key } from 'lucide-react';
-import { SecretKey } from '../../types';
+
+interface SecretKey {
+  _id: string;
+  secretKey: string;
+  projectName: string;
+  plan: string;
+  expiryDate: string;
+}
 
 export const SecretKeyManager: React.FC = () => {
   const [projectName, setProjectName] = useState('');
   const [plan, setPlan] = useState<'basic' | 'better' | 'best'>('basic');
   const [expiryDate, setExpiryDate] = useState('');
-  const addSecretKey = useAdminStore((state) => state.addSecretKey);
-  const removeSecretKey = useAdminStore((state) => state.removeSecretKey);
-  const secretKeys = useAdminStore((state) => state.secretKeys);
+  const [secretKeys, setSecretKeys] = useState<SecretKey[]>([]);
 
-  const generateSecretKey = () => {
+  // Fetch keys from the database
+  const fetchSecretKeys = async () => {
+    try {
+      const response = await fetch('/api/admin/keys');
+      const data = await response.json();
+      if (data.success) {
+        setSecretKeys(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching secret keys:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchSecretKeys();
+  }, []);
+
+  // Create a new key
+  const generateSecretKey = async () => {
     if (!projectName || !expiryDate) {
       alert('Please fill in all fields');
       return;
     }
 
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let key = '';
-    for (let i = 0; i < 16; i++) {
-      key += chars.charAt(Math.floor(Math.random() * chars.length));
+    try {
+      const response = await fetch('/api/admin/keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectName,
+          plan,
+          expiryDate,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSecretKeys((prev) => [...prev, data.data]);
+        setProjectName('');
+        setExpiryDate('');
+      }
+    } catch (error) {
+      console.error("Error creating secret key:", error.message);
     }
-
-    const newKey: SecretKey = {
-      key,
-      projectName,
-      plan,
-      expiresAt: new Date(expiryDate).toISOString()
-    };
-
-    addSecretKey(newKey);
-    setProjectName('');
-    setExpiryDate('');
   };
 
-  const handleDelete = (key: string) => {
+  // Delete a key
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to revoke this key?')) {
-      removeSecretKey(key);
+      try {
+        const response = await fetch(`/api/admin/keys/${id}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (data.success) {
+          setSecretKeys((prev) => prev.filter((key) => key._id !== id));
+        }
+      } catch (error) {
+        console.error("Error deleting secret key:", error.message);
+      }
     }
   };
 
@@ -84,11 +119,11 @@ export const SecretKeyManager: React.FC = () => {
           <Key className="w-6 h-6" />
           Active Secret Keys
         </h2>
-        
+
         <div className="space-y-4">
           {secretKeys.map((secretKey) => (
             <div
-              key={secretKey.key}
+              key={secretKey._id}
               className="bg-[#121218] border border-[#C33AFF]/20 rounded-lg p-6 flex items-center justify-between"
             >
               <div className="space-y-2">
@@ -97,18 +132,18 @@ export const SecretKeyManager: React.FC = () => {
                 </h3>
                 <div className="space-y-1">
                   <code className="block bg-[#1B1B21] px-2 py-1 rounded text-sm font-mono text-[#D3D3DF]">
-                    {secretKey.key}
+                    {secretKey.secretKey}
                   </code>
                   <p className="text-sm text-[#D3D3DF]/60">
-                    Plan: {secretKey.plan.charAt(0).toUpperCase() + secretKey.plan.slice(1)}
+                    Plan: {secretKey.plan}
                   </p>
                   <p className="text-sm text-[#D3D3DF]/60">
-                    Expires: {new Date(secretKey.expiresAt).toLocaleDateString()}
+                    Expires: {new Date(secretKey.expiryDate).toLocaleDateString()}
                   </p>
                 </div>
               </div>
               <Button
-                onClick={() => handleDelete(secretKey.key)}
+                onClick={() => handleDelete(secretKey._id)}
                 variant="destructive"
                 className="min-w-[100px]"
               >

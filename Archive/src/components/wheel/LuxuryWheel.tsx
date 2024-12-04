@@ -1,8 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { Prize, SpinResult } from '../../types';
-import { type ClassValue, clsx } from "clsx";
-import { cn } from '/lib/utils.ts'
+import { cn } from '../../lib/utils';
 
 interface Props {
   prizes: Prize[];
@@ -21,8 +20,8 @@ export const LuxuryWheel: React.FC<Props> = ({
   onSpinEnd,
   disabled,
   style = {
-    borderColor: '#FFD700',
-    stopperColor: '#FF0000',
+    borderColor: 'violet',
+    stopperColor: 'teal',
     centerColor: '#FFD700',
     glassEffect: true,
   },
@@ -31,45 +30,61 @@ export const LuxuryWheel: React.FC<Props> = ({
   const [isSpinning, setIsSpinning] = useState(false);
 
   const getRandomPrize = () => {
-    const random = Math.random();
-    let sum = 0;
-    for (const prize of prizes) {
-      sum += prize.probability;
-      if (random <= sum) return prize;
+    const totalProbability = prizes.reduce((sum, prize) => sum + prize.probability, 0);
+  
+    if (totalProbability === 0) {
+      throw new Error("Total probability cannot be zero.");
     }
+  
+    const random = Math.random() * totalProbability;
+    let cumulativeProbability = 0;
+  
+    for (const prize of prizes) {
+      cumulativeProbability += prize.probability;
+      if (random <= cumulativeProbability) {
+        return prize;
+      }
+    }
+  
+    // Fallback in case of floating-point imprecision
     return prizes[prizes.length - 1];
   };
-
+  
   const spin = () => {
     if (isSpinning || disabled) return;
-
+  
     setIsSpinning(true);
+  
     const prize = getRandomPrize();
     const prizeIndex = prizes.findIndex((p) => p.id === prize.id);
-    const baseRotation = 1440; // 4 full rotations
+  
     const sliceAngle = 360 / prizes.length;
-    const targetRotation = baseRotation + (prizeIndex * sliceAngle);
-
+    const baseRotation = 2160; // 6 full rotations
+    const randomExtraRotation = Math.random() * sliceAngle; // Add randomness within the slice
+    const targetRotation = baseRotation + prizeIndex * sliceAngle + randomExtraRotation;
+  
     gsap.to(wheelRef.current, {
       rotation: targetRotation,
-      duration: 5,
+      duration: 6,
       ease: "elastic.out(1, 0.3)",
       onComplete: () => {
         setIsSpinning(false);
         onSpinEnd({ prize, rotation: targetRotation });
-      }
+      },
     });
   };
 
+  
+  
   const renderSlices = () => {
     const sliceAngle = 360 / prizes.length;
-    const radius = 150;
-    const center = 200;
+    const radius = 350; // Larger radius for a bigger wheel
+    const center = 400; // Adjust the center point
 
     return prizes.map((prize, i) => {
       const angle = (i * sliceAngle * Math.PI) / 180;
       const nextAngle = ((i + 1) * sliceAngle * Math.PI) / 180;
-      
+
       const x1 = center + radius * Math.cos(angle);
       const y1 = center + radius * Math.sin(angle);
       const x2 = center + radius * Math.cos(nextAngle);
@@ -79,133 +94,60 @@ export const LuxuryWheel: React.FC<Props> = ({
 
       return (
         <g key={prize.id}>
-          <defs>
-            <linearGradient
-              id={`gradient-${prize.id}`}
-              x1="0%"
-              y1="0%"
-              x2="100%"
-              y2="100%"
-            >
-              <stop
-                offset="0%"
-                style={{ stopColor: prize.color, stopOpacity: 0.8 }}
-              />
-              <stop
-                offset="100%"
-                style={{ stopColor: prize.color, stopOpacity: 1 }}
-              />
-            </linearGradient>
-            {style.glassEffect && (
-              <filter id={`glass-${prize.id}`}>
-                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-                <feOffset in="blur" dx="1" dy="1" result="offsetBlur" />
-                <feSpecularLighting
-                  in="blur"
-                  surfaceScale="5"
-                  specularConstant=".75"
-                  specularExponent="20"
-                  lightingColor="#FFFFFF"
-                  result="specOut"
-                >
-                  <fePointLight x="-5000" y="-10000" z="20000" />
-                </feSpecularLighting>
-                <feComposite
-                  in="specOut"
-                  in2="SourceAlpha"
-                  operator="in"
-                  result="specOut"
-                />
-                <feComposite
-                  in="SourceGraphic"
-                  in2="specOut"
-                  operator="arithmetic"
-                  k1="0"
-                  k2="1"
-                  k3="1"
-                  k4="0"
-                  result="litPaint"
-                />
-              </filter>
-            )}
-          </defs>
           <path
             d={path}
-            fill={`url(#gradient-${prize.id})`}
+            fill={prize.color}
             stroke={style.borderColor}
-            strokeWidth="2"
-            filter={style.glassEffect ? `url(#glass-${prize.id})` : undefined}
-            className={cn(
-              "transition-all duration-300",
-              prize.glowColor && "filter drop-shadow-lg"
-            )}
+            strokeWidth="3"
+            className="transition-all duration-300"
           />
           <text
-            x={center + (radius * 0.65) * Math.cos(angle + sliceAngle / 2 * Math.PI / 180)}
-            y={center + (radius * 0.65) * Math.sin(angle + sliceAngle / 2 * Math.PI / 180)}
+            x={center + radius * 0.6 * Math.cos(angle + (sliceAngle / 2) * (Math.PI / 180))}
+            y={center + radius * 0.6 * Math.sin(angle + (sliceAngle / 2) * (Math.PI / 180))}
             fill="white"
-            fontSize="16"
+            fontSize="18"
             fontWeight="bold"
             textAnchor="middle"
             dominantBaseline="middle"
-            transform={`rotate(${(i * sliceAngle) + (sliceAngle / 2)}, ${center + (radius * 0.65) * Math.cos(angle + sliceAngle / 2 * Math.PI / 180)}, ${center + (radius * 0.65) * Math.sin(angle + sliceAngle / 2 * Math.PI / 180)})`}
-            className="text-shadow"
           >
             {prize.text}
           </text>
-          {prize.image && (
-            <image
-              href={prize.image}
-              x={center + (radius * 0.3) * Math.cos(angle + sliceAngle / 2 * Math.PI / 180) - 15}
-              y={center + (radius * 0.3) * Math.sin(angle + sliceAngle / 2 * Math.PI / 180) - 15}
-              width="30"
-              height="30"
-              transform={`rotate(${(i * sliceAngle) + (sliceAngle / 2)}, ${center + (radius * 0.3) * Math.cos(angle + sliceAngle / 2 * Math.PI / 180)}, ${center + (radius * 0.3) * Math.sin(angle + sliceAngle / 2 * Math.PI / 180)})`}
-            />
-          )}
         </g>
       );
     });
   };
 
   return (
-    <div className="relative">
+    <div className="relative flex items-center justify-center">
       <svg
         ref={wheelRef}
-        viewBox="0 0 400 400"
-        className="w-full max-w-md mx-auto filter drop-shadow-xl"
+        viewBox="0 0 800 800" // Larger viewBox for a bigger wheel
+        className="w-full max-w-[600px] mx-auto filter drop-shadow-xl"
       >
         {/* Outer ring */}
         <circle
-          cx="200"
-          cy="200"
-          r="155"
+          cx="400"
+          cy="400"
+          r="370"
           fill="none"
           stroke={style.borderColor}
-          strokeWidth="10"
-          className="opacity-80"
+          strokeWidth="15"
         />
-        
+
         {/* Wheel sections */}
         {renderSlices()}
-        
+
         {/* Center decoration */}
-        <circle
-          cx="200"
-          cy="200"
-          r="20"
-          fill={style.centerColor}
-          className="filter drop-shadow-lg"
-        />
+        <circle cx="400" cy="400" r="40" fill={style.centerColor} className="filter drop-shadow-lg" />
       </svg>
 
       {/* Stopper */}
       <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-8 h-12"
-        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+        className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-6 w-12 h-16"
+        style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.3))' }}
       >
         <div
-          className="w-0 h-0 border-l-[16px] border-l-transparent border-t-[24px] border-r-[16px] border-r-transparent mx-auto"
+          className="w-0 h-0 border-l-[24px] border-l-transparent border-t-[36px] border-r-[24px] border-r-transparent mx-auto"
           style={{ borderTopColor: style.stopperColor }}
         />
       </div>
@@ -215,13 +157,13 @@ export const LuxuryWheel: React.FC<Props> = ({
         onClick={spin}
         disabled={isSpinning || disabled}
         className={cn(
-          "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-          "w-20 h-20 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600",
-          "shadow-lg transform hover:scale-105 transition-all",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          "border-4 border-yellow-300",
-          "flex items-center justify-center",
-          "font-bold text-white text-lg"
+          'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2',
+          'w-24 h-24 rounded-full bg-gradient-to-r from-purple-500 to-purple-900',
+          'shadow-lg transform hover:scale-105 transition-all',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          'border-4 border-yellow-400',
+          'flex items-center justify-center',
+          'font-bold text-white text-lg'
         )}
       >
         SPIN

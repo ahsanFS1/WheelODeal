@@ -126,7 +126,7 @@ const defaultLandingPage: LandingPageConfig = {
   finalCta: {
     title: "Ready to Boost Your Engagement?",
     buttonText: "Get Started Now",
-    buttonLink: "/user-dashboard",
+    buttonLink: "/login-form",
     buttonColor: "#C33AFF",
     buttonTextColor: "#FFFFFF",
     guarantee: "30-day money-back guarantee"
@@ -178,7 +178,7 @@ const defaultConfig: PageConfig = {
     }
   ],
   backgroundColor: "#121218",
-  logo: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Flogo-sample&psig=AOvVaw2SJuE632NFR4GhkbOmYNLo&ust=1732977082422000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCOia-IbhgYoDFQAAAAAdAAAAABAE",
+  logo: "https://www.shutterstock.com/image-vector/minimalistic-circular-logo-sample-vector-2278726727",
   headerTitle: "Spin & Win!",
   subtitle: "Try your luck and win amazing prizes!",
   carouselImages: [
@@ -255,3 +255,83 @@ export const useConfigStore = create<ConfigState>()(
 export const useSavedConfig = () => {
   return useConfigStore((state) => state.savedConfig);
 };
+
+
+
+export const usePublicPageConStore = create((set) => ({
+  
+  publicPage: {},
+
+  fetchPublicPage: async () => {
+    console.log("Fetching public page...");
+    try {
+      const res = await fetch('/api/'); // Adjust endpoint as needed
+      const data = await res.json();
+      if (data.success) {
+        set({ publicPage: data.data });
+      } else {
+        console.error("Failed to fetch public page:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching public page:", error.message);
+    }
+  },
+  
+}));
+ 
+
+
+
+
+
+export const useConStore = create((set) => ({
+  mlp: {}, // Initialize as an empty object to prevent undefined errors
+  
+  updateLandingPage: async (landingPageUpdate) => {
+    try {
+      const response = await fetch(`/api/landing-page`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(landingPageUpdate),
+      });
+  
+      const result = await response.json();
+  
+      if (result.success) {
+        set((state) => ({
+          config: {
+            ...state.config,
+            landingPage: {
+              ...state.config.landingPage,
+              ...landingPageUpdate,
+            },
+          },
+        }));
+        console.log('Landing page updated successfully in the database.');
+      } else {
+        console.error(`Failed to update landing page: ${result.message}`);
+      }
+    } catch (error) {
+      console.error(`Error updating landing page:`, error.message);
+    }
+  },
+  
+  
+  fetchMLP: async () => {
+    try {
+      const res = await fetch('/api/');
+      const data = await res.json();
+      if (data.success) {
+       
+        set({ mlp: data.data }); // Update state with fetched data
+      } else {
+        console.error('Failed to fetch MLP:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching MLP:', error);
+    }
+  },
+}));
+

@@ -12,6 +12,8 @@ export const Carousel: React.FC<Props> = ({ images, autoPlayInterval = 5000 }) =
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
+    console.log("Carousel images:", images); // Debug: Check if images are correctly received
+
     if (images.length <= 1) return;
 
     const interval = setInterval(() => {
@@ -29,10 +31,16 @@ export const Carousel: React.FC<Props> = ({ images, autoPlayInterval = 5000 }) =
     setCurrentIndex((current) => (current + 1) % images.length);
   };
 
-  if (!images.length) return null;
+  // Check if there are no images to display
+  if (!images.length) {
+    console.error("No images provided to the Carousel component.");
+    return null;
+  }
+
+  console.log("Current Index:", currentIndex); // Debug: Check if currentIndex updates properly
 
   return (
-    <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+    <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-red-500"> {/* Added border for visual debugging */}
       <AnimatePresence mode="wait">
         <motion.img
           key={currentIndex}

@@ -23,6 +23,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 export default function App() {
   return (
+    console.log("Running the app"),
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLandingPage />} />
@@ -35,11 +36,29 @@ export default function App() {
           } 
         />
         <Route 
+          path="/login-form" 
+          element={
+            // <ProtectedRoute>
+              <LoginForm />
+            // </ProtectedRoute>
+          } 
+       
+          
+            
+           
+        />
+        <Route 
           path="/user-dashboard" 
           element={
             // <ProtectedRoute>
               <UserDashboard />
-            // </ProtectedRoute>
+          //  </ProtectedRoute>
+          }               
+        />
+        <Route 
+          path="/public-page" 
+          element={
+            <PublicPage />
           } 
         />
       </Routes>

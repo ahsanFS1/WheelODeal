@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { TwoFactorSetup } from './TwoFactorSetup';
-import bcrypt from 'bcryptjs';
+import axios from 'axios';
 
-interface Props {
-  onComplete: (credentials: { username: string; password: string; twoFactorSecret: string }) => void;
-}
-
-export const AdminSetup: React.FC<Props> = ({ onComplete }) => {
+export const AdminSetup: React.FC = () => {
   const [step, setStep] = useState<'credentials' | '2fa'>('credentials');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -32,12 +28,23 @@ export const AdminSetup: React.FC<Props> = ({ onComplete }) => {
   };
 
   const handleTwoFactorComplete = async (twoFactorSecret: string) => {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    onComplete({
-      username,
-      password: hashedPassword,
-      twoFactorSecret,
-    });
+    try {
+      const response = await axios.post('/api/admin/setup', {
+        username,
+        password,
+        twoFactorSecret,
+      });
+
+      if (response.data.success) {
+        alert('Admin account created successfully!');
+        setStep('credentials');
+      } else {
+        setError(response.data.message);
+      }
+    } catch (err) {
+      console.error('Error creating admin account:', err.message);
+      setError('An error occurred while setting up the admin account.');
+    }
   };
 
   if (step === '2fa') {
@@ -50,69 +57,45 @@ export const AdminSetup: React.FC<Props> = ({ onComplete }) => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#121218] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-[#1B1B21] p-8 rounded-lg shadow-lg">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create Admin Account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <h2 className="text-3xl font-extrabold text-[#C33AFF] text-center mb-4">Create Admin Account</h2>
+          <p className="text-sm text-gray-400 text-center">
             This is a one-time setup. No additional admin accounts can be created.
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleCredentialsSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="username" className="sr-only">Username</label>
-              <input
-                id="username"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="confirm-password" className="sr-only">Confirm Password</label>
-              <input
-                id="confirm-password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
+        <form onSubmit={handleCredentialsSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full p-3 bg-[#121218] text-gray-300 border border-[#C33AFF] rounded focus:ring-[#C33AFF] focus:outline-none"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 bg-[#121218] text-gray-300 border border-[#C33AFF] rounded focus:ring-[#C33AFF] focus:outline-none"
+            />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full p-3 bg-[#121218] text-gray-300 border border-[#C33AFF] rounded focus:ring-[#C33AFF] focus:outline-none"
+            />
           </div>
 
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
+          {error && <div className="text-red-500 text-center text-sm">{error}</div>}
 
-          <div>
-            <Button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Continue to 2FA Setup
-            </Button>
-          </div>
+          <Button type="submit" className="w-full bg-[#C33AFF] text-white hover:bg-[#C33AFF]/90">
+            Continue to 2FA Setup
+          </Button>
         </form>
       </div>
     </div>

@@ -1,18 +1,41 @@
-import React, { useState } from 'react';
-import { useConfigStore } from '../store/configStore';
+import React, { useState, useEffect } from 'react';
 import { SpinningWheel } from './SpinningWheel';
 import { SpinResult } from '../types';
 import { Carousel } from './carousel/Carousel';
 import { CountdownTimer } from './CountdownTimer';
 import confetti from 'canvas-confetti';
+import { LuxuryWheel } from './wheel/LuxuryWheel';
 
 export const PublicPage: React.FC = () => {
-  const { config } = useConfigStore();
+  // Local state for fetched config and loading state
+  const [config, setConfig] = useState<any>(null);
+  const [isFetching, setIsFetching] = useState(false);
   const [spinResult, setSpinResult] = useState<SpinResult | null>(null);
   const [bonusCode] = useState('20CHRISTMAS');
-  
-  // Set expiry time to 24 hours from now
-  const [expiryTime] = useState(Date.now() + 24 * 60 * 60 * 1000);
+  const [expiryTime] = useState(Date.now() + 24 * 60 * 60 * 1000); // 24 hours expiry time
+
+  // Fetch config data when component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log('Starting fetch...');
+        setIsFetching(true);
+        const res = await fetch('/api/public-page'); // Adjust API endpoint as necessary
+        const data = await res.json();
+        if (data.success) {
+          setConfig(data.data); // Set the fetched data to state
+        } else {
+          console.error('Failed to fetch public page:', data.message);
+        }
+        setIsFetching(false);
+      } catch (error) {
+        console.error('Error during fetch:', error);
+        setIsFetching(false);
+      }
+    };
+
+    fetchData(); // Call the function to fetch data on mount
+  }, []); // Empty dependency array ensures this runs once when the component mounts
 
   const handleSpinEnd = (result: SpinResult) => {
     setSpinResult(result);
@@ -29,14 +52,24 @@ export const PublicPage: React.FC = () => {
     }
   };
 
+  // If config data is not yet fetched, display loading state
+  if (isFetching) {
+    return <div>Loading...</div>;
+  }
+
+  // If config is not available after fetching, display error
+  if (!config) {
+    return <div>Failed to load page configuration.</div>;
+  }
+
   return (
     <div className="min-h-screen bg-[#121218] text-white">
       {/* Header Section */}
       <header className="border-b border-purple-900/20 p-4">
-        <div className="max-w-4xl mx-auto">
-          <img 
-            src={config.logo || '/logo.png'} 
-            alt="Logo" 
+        <div className="max-w-4xl mx-auto flex items-center justify-center">
+          <img
+            src={config.logo || '/logo.png'}
+            alt="Logo"
             className="h-12 object-contain"
           />
         </div>
@@ -58,7 +91,7 @@ export const PublicPage: React.FC = () => {
       {config.carouselImages && config.carouselImages.length > 0 && (
         <section className="py-8">
           <div className="max-w-4xl mx-auto px-4">
-            <ProductCarousel images={config.carouselImages} />
+            <Carousel images={config.carouselImages} />
           </div>
         </section>
       )}
@@ -72,7 +105,7 @@ export const PublicPage: React.FC = () => {
               onSpinEnd={handleSpinEnd}
               disabled={!!spinResult}
             />
-            
+
             {/* Bonus Code Display */}
             <div className="mt-6 text-center">
               <div className="inline-block bg-purple-900/20 rounded-lg p-4">

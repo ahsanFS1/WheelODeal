@@ -1,103 +1,90 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
-import authenticator from 'authenticator';
-import bcrypt from 'bcryptjs';
 
 interface Props {
-  storedCredentials: {
-    username: string;
-    password: string;
-    twoFactorSecret: string;
-  };
-  onLogin: () => void;
+  onLogin: () => void; // Callback after successful login
 }
 
-export const AdminLogin: React.FC<Props> = ({ storedCredentials, onLogin }) => {
+export const AdminLogin: React.FC<Props> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactorToken, setTwoFactorToken] = useState('');
   const [step, setStep] = useState<'credentials' | '2fa'>('credentials');
   const [error, setError] = useState('');
+  const [secret, setSecret] = useState('')
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (username !== storedCredentials.username) {
-      setError('Invalid credentials');
-      return;
-    }
 
-    const passwordMatch = await bcrypt.compare(password, storedCredentials.password);
-    if (!passwordMatch) {
-      setError('Invalid credentials');
-      return;
-    }
-
-    setStep('2fa');
-  };
-
-  const handleTwoFactorSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
 
     try {
-      const isValid = authenticator.verifyToken(storedCredentials.twoFactorSecret, twoFactorToken);
-      
-      if (isValid) {
-        onLogin();
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSecret(data.twoFactorSecret);
+        setStep('2fa'); // Proceed to 2FA verification
       } else {
-        setError('Invalid 2FA code');
+        setError(data.message || 'Invalid credentials');
       }
-    } catch (err) {
-      setError('Error validating 2FA code');
+    } catch (error) {
+      setError('Error during login. Please try again.');
+    }
+  };
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    try {
+     
+      const response = await fetch('http://localhost:5000/api/admin/verify-2fa', {
+       
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({  secret, token:twoFactorToken }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        onLogin(); // Callback on successful login
+      } else {
+        setError(data.message || 'Invalid 2FA code');
+      }
+    } catch (error) {
+      setError('Error verifying 2FA. Please try again.');
     }
   };
 
   if (step === '2fa') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-          <div>
-            <h2 className="text-2xl font-bold text-center mb-4">
-              Enter 2FA Code
-            </h2>
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-[#121218] py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 bg-[#1B1B21] p-8 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-[#C33AFF] text-center mb-4">Enter 2FA Code</h2>
 
-          <form className="space-y-6" onSubmit={handleTwoFactorSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Enter the 6-digit code from your authenticator app
-              </label>
-              <input
-                type="text"
-                required
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="000000"
-                value={twoFactorToken}
-                onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                maxLength={6}
-              />
-            </div>
+          <form onSubmit={handleTwoFactorSubmit} className="space-y-6">
+            <input
+              type="text"
+              maxLength={6}
+              placeholder="6-digit code"
+              value={twoFactorToken}
+              onChange={(e) => setTwoFactorToken(e.target.value)}
+              className="w-full p-3 bg-[#121218] text-gray-300 border border-[#C33AFF] rounded focus:ring-[#C33AFF] focus:outline-none"
+            />
 
-            {error && (
-              <div className="text-red-500 text-sm text-center">{error}</div>
-            )}
+            {error && <div className="text-red-500 text-center text-sm">{error}</div>}
 
             <div className="flex space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => setStep('credentials')}
-              >
+              <Button onClick={() => setStep('credentials')} className="w-full bg-gray-700 text-white hover:bg-gray-600">
                 Back
               </Button>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={twoFactorToken.length !== 6}
-              >
+              <Button type="submit" className="w-full bg-[#C33AFF] text-white hover:bg-[#C33AFF]/90" disabled={twoFactorToken.length !== 6}>
                 Verify
               </Button>
             </div>
@@ -108,53 +95,30 @@ export const AdminLogin: React.FC<Props> = ({ storedCredentials, onLogin }) => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-        <div>
-          <h2 className="text-2xl font-bold text-center mb-4">
-            Admin Login
-          </h2>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#121218] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-[#1B1B21] p-8 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold text-[#C33AFF] text-center mb-4">Admin Login</h2>
 
-        <form className="space-y-6" onSubmit={handleCredentialsSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
+        <form onSubmit={handleCredentialsSubmit} className="space-y-6">
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full p-3 bg-[#121218] text-gray-300 border border-[#C33AFF] rounded focus:ring-[#C33AFF] focus:outline-none"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-3 bg-[#121218] text-gray-300 border border-[#C33AFF] rounded focus:ring-[#C33AFF] focus:outline-none"
+          />
 
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
+          {error && <div className="text-red-500 text-center text-sm">{error}</div>}
 
-          <Button
-            type="submit"
-            className="w-full"
-          >
-            Continue
+          <Button type="submit" className="w-full bg-purple-700 text-white hover:bg-purple-700/70">
+            Sign In
           </Button>
         </form>
       </div>

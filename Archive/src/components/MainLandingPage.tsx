@@ -1,76 +1,42 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSavedConfig } from '../store/configStore';
+
 import { Button } from './ui/button';
 import { SpinningWheel } from './SpinningWheel';
 import { motion } from 'framer-motion';
 import * as Accordion from '@radix-ui/react-accordion';
 import * as Icons from 'lucide-react';
 import { cn } from '../lib/utils';
-import { Prize } from '../types.ts'
-import { LuxuryWheel } from './wheel/LuxuryWheel.tsx';
+
+
+import { useConStore } from '../store/configStore';
 
 
 
 
-const prizes: Prize[] = [
-  {
-    id: '1',
-    text: 'Free Coffee',
-    color: '#FF5733', // Orange
-    probability: 0.2,
-    redirectUrl: 'https://example.com/free-coffee',
-    glowColor: '#FFC300',
-  },
-  {
-    id: '2',
-    text: 'Discount Voucher',
-    color: '#33FF57', // Green
-    probability: 0.3,
-    redirectUrl: 'https://example.com/discount-voucher',
-    glowColor: '#85FFBD',
-  },
-  {
-    id: '3',
-    text: 'Gift Card',
-    color: '#3357FF', // Blue
-    probability: 0.1,
-    redirectUrl: 'https://example.com/gift-card',
-    glowColor: '#85C1FF',
-  },
-  {
-    id: '4',
-    text: 'T-Shirt',
-    color: '#FF33A1', // Pink
-    probability: 0.15,
-    redirectUrl: 'https://example.com/tshirt',
-    glowColor: '#FFC1E3',
-  },
-  {
-    id: '5',
-    text: 'Free Lunch',
-    color: '#FFD700', // Gold
-    probability: 0.25,
-    redirectUrl: 'https://example.com/free-lunch',
-    glowColor: '#FFFF99',
-  },
-];
-const videoIds = [
-  'dQw4w9WgXcQ', // Example video ID
-  '3JZ_D3ELwOQ',
-  '2Vv-BfVoq4g',
-  'M7FIvfx5J10',
-  'hT_nvWreIhg',
-];
 
-const getRandomVideoId = () => {
-  return videoIds[Math.floor(Math.random() * videoIds.length)];
-};
 export const MainLandingPage: React.FC = () => {
+
+  const {fetchMLP, mlp: landingPage} = useConStore() as {
+    fetchMLP: () => void;
+    landingPage: any;
+  };
+
+  useEffect(()=>{
+
+    fetchMLP();
+  },[fetchMLP]);
+
   const navigate = useNavigate();
-  const config = useSavedConfig();
   
-  const landingPage = config.landingPage;
+  console.log(landingPage);
+  // Ensure `hero` exists
+  if (!landingPage.hero) {
+    return <div>Landing Page configuration is incomplete.</div>;
+  }
+  
+  
+  // const landingPage = config.landingPage;
 
   
   const fadeIn = {
@@ -90,6 +56,10 @@ export const MainLandingPage: React.FC = () => {
   const handleAdminLogin = () => {
     navigate('/admin_d01z');
   };
+ 
+
+
+console.log("Landing Page Data: ",landingPage);
   return (
     <div className="min-h-screen bg-[#121218] text-white">
       {/* Hero Section */}
@@ -112,7 +82,7 @@ export const MainLandingPage: React.FC = () => {
         >
           {landingPage.hero.logo && (
             <img
-              src={config.logo}
+              src={landingPage.hero.logo}
               alt="Logo"
               className="h-24 mx-auto object-contain drop-shadow-lg mb-8"
             />
@@ -154,7 +124,7 @@ export const MainLandingPage: React.FC = () => {
           <div className="max-w-3xl mx-auto">
             
             <SpinningWheel
-              prizes={prizes}
+              prizes={landingPage.prizes}
               onSpinEnd={() => {}}
               disabled={false}
             />
@@ -167,8 +137,8 @@ export const MainLandingPage: React.FC = () => {
                 document.getElementById('video')?.scrollIntoView({ behavior: 'smooth' });
                 
                 // Open the first video link in a new tab
-                const firstVideoId = videoIds[0]; // Replace with desired logic for selecting a video
-                const videoUrl = `https://www.youtube.com/watch?v=${firstVideoId}`;}}
+                ; // Replace with desired logic for selecting a video
+                const videoUrl = `https://www.youtube.com/watch?v=${landingPage.videoId}`;}}
               style={{
                 backgroundColor: landingPage.demo.secondaryCta.color,
                 color: landingPage.demo.secondaryCta.textColor,
@@ -199,7 +169,7 @@ export const MainLandingPage: React.FC = () => {
           <iframe
             width="100%"
             height="500"
-            src={`https://www.youtube.com/embed/${getRandomVideoId()}`}
+            src={`https://www.youtube.com/embed/${landingPage.videoId}`}
             title="Random YouTube Video"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

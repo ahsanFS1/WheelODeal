@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import authenticator from 'authenticator';
 import { Button } from '../ui/button';
 
 interface Props {
@@ -15,37 +14,56 @@ export const TwoFactorSetup: React.FC<Props> = ({ onComplete, onCancel }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Generate a new secret key
-    const newSecret = authenticator.generateKey();
+    const generateRandomSecret = (length: number) => {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; // Base32 alphabet
+      let result = '';
+      const array = new Uint32Array(length);
+      window.crypto.getRandomValues(array); // Use browser crypto API
+      array.forEach((value) => {
+        result += characters[value % characters.length];
+      });
+      return result;
+    };
+
+    const newSecret = generateRandomSecret(16);
     setSecret(newSecret);
 
-    // Generate the QR code URL
-    const otpUrl = authenticator.generateTotpUri(
-      newSecret,
-      'Admin',
-      'Luxury Wheel',
-      'SHA1',
-      6,
-      30
-    );
-
+    const otpUrl = `otpauth://totp/Admin:LuxuryWheel?secret=${newSecret}&issuer=LuxuryWheel`;
     QRCode.toDataURL(otpUrl)
-      .then(url => setQrCodeUrl(url))
-      .catch(err => console.error('Error generating QR code:', err));
+      .then((url) => setQrCodeUrl(url))
+      .catch((err) => console.error('Error generating QR code:', err));
   }, []);
 
-  const verifyToken = () => {
+  const verifyToken = async () => {
+    console.log("Verify button clicked"); // Debugging step
+    console.log("Secret:", secret);
+    console.log("Token:", token);
+
+    if (token.length !== 6 || !/^\d+$/.test(token)) {
+      setError("Invalid token format. Tokens must be 6 digits.");
+      return;
+    }
+
     try {
-      // Verify the token with a ±1 window to account for time drift
-      const isValid = authenticator.verifyToken(secret, token);
-      
-      if (isValid) {
+      setError('');
+
+      const response = await fetch('http://localhost:5000/api/admin/verify-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, token }),
+      });
+
+      const data = await response.json();
+      console.log('Backend Response:', data);
+
+      if (data.success) {
         onComplete(secret);
       } else {
-        setError('Invalid token. Please try again.');
+        setError(data.message || 'Invalid token. Please try again.');
       }
     } catch (err) {
       setError('Error validating token. Please try again.');
+      console.error('Token verification error:', err);
     }
   };
 
@@ -88,16 +106,10 @@ export const TwoFactorSetup: React.FC<Props> = ({ onComplete, onCancel }) => {
             )}
 
             <div className="flex justify-end space-x-4">
-              <Button
-                variant="outline"
-                onClick={onCancel}
-              >
+              <Button variant="outline" onClick={onCancel}>
                 Back
               </Button>
-              <Button
-                onClick={verifyToken}
-                disabled={token.length !== 6}
-              >
+              <Button onClick={verifyToken} disabled={token.length !== 6}>
                 Verify & Enable
               </Button>
             </div>

@@ -1,28 +1,52 @@
-import React from 'react';
-import { useAdminStore } from '../../store/adminStore';
-import { AdminSetup } from './AdminSetup';
-import { AdminLogin } from './AdminLogin';
+import React, { useState, useEffect } from 'react';
+import { AdminSetup } from '../auth/AdminSetup';
+import { AdminLogin } from '../auth/AdminLogin';
 import { AdminPanel } from './AdminPanel';
-import { useAuthStore } from '../../store/authStore';
 import { Toaster } from 'sonner';
 
 export const AdminDashboard: React.FC = () => {
-  const { isSetup, credentials } = useAdminStore();
-  const { user } = useAuthStore();
+  const [isSetup, setIsSetup] = useState<boolean | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Reset admin store to force new account creation
-  React.useEffect(() => {
-    if (!credentials) {
-      useAdminStore.getState().reset();
-    }
-  }, [credentials]);
+  // Check if the admin is already set up
+  useEffect(() => {
+    const checkAdminSetup = async () => {
+      try {
+        console.log("Fetching");
+        const response = await fetch('http://localhost:5000/api/admin'); // API to check if admin exists
+        const data = await response.json();
+        if (data.success && data.data) {
+          setIsSetup(true);
+        } else {
+          setIsSetup(false);
+        }
+      } catch (error) {
+        console.error('Error checking admin setup:', error);
+        setIsSetup(false);
+      }
+    };
 
-  if (!isSetup || !credentials) {
+    checkAdminSetup();
+  }, []);
+
+  // Display a loading state while checking setup
+  if (isSetup === null) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isSetup) {
     return <AdminSetup />;
   }
 
-  if (!user) {
-    return <AdminLogin />;
+  if (!isLoggedIn) {
+    return (
+      <AdminLogin
+        onLogin={() => {
+          console.log('Admin logged in');
+          setIsLoggedIn(true);
+        }}
+      />
+    );
   }
 
   return (

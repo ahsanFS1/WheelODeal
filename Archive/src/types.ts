@@ -9,12 +9,15 @@ export interface Prize {
 
 export interface SpinResult {
   prize: Prize;
+  rotation: number; // Add this line
 }
+
 
 export interface CarouselImage {
   url: string;
   alt: string;
 }
+
 
 export interface LandingPageConfig {
   hero: {
@@ -111,5 +114,5 @@ export interface PageConfig {
   headerTitle?: string;
   subtitle?: string;
   backgroundImage?: string;
-  carouselImages?: CarouselImage[];
+  carouselImages: CarouselImage[];
 }
