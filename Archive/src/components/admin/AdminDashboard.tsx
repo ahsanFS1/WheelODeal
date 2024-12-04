@@ -13,7 +13,7 @@ export const AdminDashboard: React.FC = () => {
     const checkAdminSetup = async () => {
       try {
         console.log("Fetching");
-        const response = await fetch('http://localhost:5000/api/admin'); // API to check if admin exists
+        const response = await fetch('/api/admin'); // API to check if admin exists
         const data = await response.json();
         if (data.success && data.data) {
           setIsSetup(true);

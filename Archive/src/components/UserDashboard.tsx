@@ -8,6 +8,7 @@ import { TextInput } from './admin/shared/TextInput';
 import { ImageUpload } from './admin/shared/ImageUpload';
 import { Carousel } from './carousel/Carousel';
 import { Toaster, toast } from 'sonner';
+import { AnalyticsDashboard } from './analytics/AnalyticsDashboard';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -19,6 +20,10 @@ export const UserDashboard: React.FC = () => {
 
   // Fetch configuration from the backend API
   useEffect(() => {
+
+    
+
+
     const fetchConfig = async () => {
       try {
         setIsFetching(true);
@@ -128,6 +133,12 @@ export const UserDashboard: React.FC = () => {
               className="px-4 py-2 text-[#D3D3DF] hover:text-[#C33AFF] data-[state=active]:text-[#C33AFF] data-[state=active]:border-b-2 data-[state=active]:border-[#C33AFF] transition-colors"
             >
               Preview
+            </Tabs.Trigger>
+            <Tabs.Trigger
+              value="analytics"
+              className="px-4 py-2 text-[#D3D3DF] hover:text-[#C33AFF] data-[state=active]:text-[#C33AFF] data-[state=active]:border-b-2 data-[state=active]:border-[#C33AFF] transition-colors"
+            >
+              Analytics
             </Tabs.Trigger>
           </Tabs.List>
 
@@ -377,6 +388,9 @@ export const UserDashboard: React.FC = () => {
     />
   </div>
 </Tabs.Content>
+
+
+
 </Tabs.Root>
       </main>
     </div>

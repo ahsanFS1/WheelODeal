@@ -48,14 +48,18 @@ export const AdminSetup: React.FC = () => {
   };
 
   if (step === '2fa') {
+
+    
     return (
       <TwoFactorSetup
         onComplete={handleTwoFactorComplete}
         onCancel={() => setStep('credentials')}
       />
     );
+    
   }
 
+ 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#121218] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-[#1B1B21] p-8 rounded-lg shadow-lg">
@@ -93,7 +97,7 @@ export const AdminSetup: React.FC = () => {
 
           {error && <div className="text-red-500 text-center text-sm">{error}</div>}
 
-          <Button type="submit" className="w-full bg-[#C33AFF] text-white hover:bg-[#C33AFF]/90">
+          <Button type="submit" className="w-full bg-purple-700 text-white hover:bg-[#C33AFF]/90">
             Continue to 2FA Setup
           </Button>
         </form>

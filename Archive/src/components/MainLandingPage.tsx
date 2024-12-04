@@ -24,7 +24,7 @@ export const MainLandingPage: React.FC = () => {
 
   useEffect(()=>{
 
-    fetchMLP();
+     fetchMLP();
   },[fetchMLP]);
 
   const navigate = useNavigate();

@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { useConfigStore } from '../../store/configStore';
 import { Button } from '../ui/button';
 import { Save } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,51 +14,90 @@ import { FaqEditor } from './editors/FaqEditor';
 import { FinalCtaEditor } from './editors/FinalCtaEditor';
 
 export const LandingPageEditor: React.FC = () => {
-  const { config, updateLandingPage } = useConfigStore();
+  const [mlp, setMlp] = useState<any>(null);
+  const [isFetching, setIsFetching] = useState(false);
 
-  const handleSave = async () => {
+  // Fetch the landing page data from the database
+  const fetchLandingPage = async () => {
     try {
-      const response = await fetch(`/api/landing-page`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(config.landingPage),
-      });
-  
-      // Check if the response is valid JSON
-      const contentType = response.headers.get('Content-Type') || '';
-      if (!contentType.includes('application/json')) {
-        throw new Error(`Unexpected response: ${await response.text()}`);
-      }
-  
-      const result = await response.json();
-  
-      if (result.success) {
-        toast.success(`Landing Page updated successfully!`, {
-          style: {
-            background: '#1B1B21',
-            color: '#D3D3DF',
-            border: '1px solid rgba(195, 58, 255, 0.2)',
-          },
-          duration: 2000,
-        });
+      setIsFetching(true);
+      const response = await fetch('/api/');
+      const data = await response.json();
+      if (data.success) {
+        setMlp(data.data);
       } else {
-        throw new Error(result.message || `Failed to update Landing Page`);
+        throw new Error(data.message || 'Failed to fetch landing page data.');
       }
     } catch (error) {
-      console.error('Error updating Landing Page:', error);
-      toast.error(`Error updating Landing Page: ${error.message}`, {
+      console.error('Error fetching landing page:', error);
+      toast.error(`Error fetching landing page: ${error.message}`, {
         style: {
           background: '#1B1B21',
           color: '#D3D3DF',
           border: '1px solid rgba(255, 58, 58, 0.2)',
         },
-        duration: 2000,
+      });
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  // Save changes to the database
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/landing-page', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mlp),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Landing Page updated successfully!', {
+          style: {
+            background: '#1B1B21',
+            color: '#D3D3DF',
+            border: '1px solid rgba(195, 58, 255, 0.2)',
+          },
+        });
+        fetchLandingPage(); // Refresh data after save
+      } else {
+        throw new Error(result.message || 'Failed to update landing page.');
+      }
+    } catch (error) {
+      console.error('Error updating landing page:', error);
+      toast.error(`Error updating landing page: ${error.message}`, {
+        style: {
+          background: '#1B1B21',
+          color: '#D3D3DF',
+          border: '1px solid rgba(255, 58, 58, 0.2)',
+        },
       });
     }
   };
-  
+
+  useEffect(() => {
+    fetchLandingPage();
+  }, []);
+
+  if (isFetching) {
+    return (
+      <div className="flex items-center justify-center h-screen text-white">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!mlp) {
+    return (
+      <div className="flex items-center justify-center h-screen text-white">
+        Failed to load landing page configuration.
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#1B1B21] rounded-lg shadow-lg p-6">
@@ -100,64 +138,65 @@ export const LandingPageEditor: React.FC = () => {
         <div className="overflow-y-auto max-h-[calc(100vh-300px)] pr-4 -mr-4">
           <Tabs.Content value="hero" className="text-[#D3D3DF]">
             <HeroEditor
-              data={config.landingPage.hero}
-              onChange={(hero) => updateLandingPage({ hero })}
+              data={mlp.hero}
+              onChange={(hero) => setMlp({ ...mlp, hero })}
             />
           </Tabs.Content>
 
+          {/* Repeat similar structure for other sections */}
           <Tabs.Content value="demo" className="text-[#D3D3DF]">
             <DemoEditor
-              data={config.landingPage.demo}
-              onChange={(demo) => updateLandingPage({ demo })}
+              data={mlp.demo}
+              onChange={(demo) => setMlp({ ...mlp, demo })}
             />
           </Tabs.Content>
 
           <Tabs.Content value="features" className="text-[#D3D3DF]">
             <FeaturesEditor
-              data={config.landingPage.features}
-              onChange={(features) => updateLandingPage({ features })}
+              data={mlp.features}
+              onChange={(features) => setMlp({ ...mlp, features })}
             />
           </Tabs.Content>
 
           <Tabs.Content value="benefits" className="text-[#D3D3DF]">
             <BenefitsEditor
-              data={config.landingPage.benefits}
-              onChange={(benefits) => updateLandingPage({ benefits })}
+              data={mlp.benefits}
+              onChange={(benefits) => setMlp({ ...mlp, benefits })}
             />
           </Tabs.Content>
 
           <Tabs.Content value="howItWorks" className="text-[#D3D3DF]">
             <HowItWorksEditor
-              data={config.landingPage.howItWorks}
-              onChange={(howItWorks) => updateLandingPage({ howItWorks })}
+              data={mlp.howItWorks}
+              onChange={(howItWorks) => setMlp({ ...mlp, howItWorks })}
             />
           </Tabs.Content>
 
           <Tabs.Content value="testimonials" className="text-[#D3D3DF]">
             <TestimonialsEditor
-              data={config.landingPage.testimonials}
-              onChange={(testimonials) => updateLandingPage({ testimonials })}
+              data={mlp.testimonials}
+              onChange={(testimonials) => setMlp({ ...mlp, testimonials })}
             />
           </Tabs.Content>
 
           <Tabs.Content value="pricing" className="text-[#D3D3DF]">
             <PricingEditor
-              data={config.landingPage.pricing}
-              onChange={(pricing) => updateLandingPage({ pricing })}
+              data={mlp.pricing}
+              onChange={(pricing) => setMlp({ ...mlp, pricing })}
             />
           </Tabs.Content>
 
           <Tabs.Content value="faq" className="text-[#D3D3DF]">
             <FaqEditor
-              data={config.landingPage.faq}
-              onChange={(faq) => updateLandingPage({ faq })}
+              data={mlp.faq}
+              onChange={(faq) => setMlp({ ...mlp, faq })}
             />
           </Tabs.Content>
 
           <Tabs.Content value="finalCta" className="text-[#D3D3DF]">
             <FinalCtaEditor
-              data={config.landingPage.finalCta}
-              onChange={(finalCta) => updateLandingPage({ finalCta })}
+              data={mlp.finalCta}
+              onChange={(finalCta) => setMlp({ ...mlp, finalCta })}
             />
           </Tabs.Content>
         </div>

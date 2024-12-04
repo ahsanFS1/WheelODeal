@@ -106,7 +106,7 @@ export const SecretKeyManager: React.FC = () => {
           />
           <Button
             onClick={generateSecretKey}
-            className="flex items-center gap-2 bg-[#C33AFF] text-white hover:bg-[#C33AFF]/90"
+            className="flex items-center gap-2 bg-purple-900 text-white hover:bg-purple-950"
           >
             <Key className="w-4 h-4" />
             Generate Key

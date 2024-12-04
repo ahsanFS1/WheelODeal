@@ -95,6 +95,14 @@ const defaultLandingPage: LandingPageConfig = {
         role: "Marketing Director",
         company: "Tech Corp",
         rating: 5
+      },
+      {
+        id: "2",
+        content: "Absolutely amazing for boosting engagement!",
+        name: "Jane Doe",
+        role: "Head of Sales",
+        company: "SalesForce Inc",
+        rating: 5
       }
     ]
   },
@@ -110,6 +118,26 @@ const defaultLandingPage: LandingPageConfig = {
         buttonColor: "#C33AFF",
         buttonTextColor: "#FFFFFF",
         buttonLink: "/signup"
+      },
+      {
+        id: "better",
+        name: "Better",
+        price: "$199/year",
+        features: ["3 Landing Page"],
+        buttonText: "Get Started",
+        buttonColor: "#C33AFF",
+        buttonTextColor: "#FFFFFF",
+        buttonLink: "/signup"
+      },
+      {
+        id: "best",
+        name: "Best",
+        price: "$349/year",
+        features: ["3 Landing Page"],
+        buttonText: "Get Started",
+        buttonColor: "#C33AFF",
+        buttonTextColor: "#FFFFFF",
+        buttonLink: "/signup"
       }
     ]
   },
@@ -120,6 +148,11 @@ const defaultLandingPage: LandingPageConfig = {
         id: "1",
         question: "What is included in each plan?",
         answer: "Each plan includes access to all core features, customization options, analytics, and support."
+      },
+      {
+        id: "2",
+        question: "Can I cancel my subscription?",
+        answer: "Yes, you can cancel anytime from your account settings. You'll retain access until the billing cycle ends."
       }
     ]
   },

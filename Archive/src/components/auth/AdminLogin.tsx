@@ -44,7 +44,7 @@ export const AdminLogin: React.FC<Props> = ({ onLogin }) => {
     
     try {
      
-      const response = await fetch('http://localhost:5000/api/admin/verify-2fa', {
+      const response = await fetch('/api/admin/verify-2fa', {
        
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,10 +81,10 @@ export const AdminLogin: React.FC<Props> = ({ onLogin }) => {
             {error && <div className="text-red-500 text-center text-sm">{error}</div>}
 
             <div className="flex space-x-4">
-              <Button onClick={() => setStep('credentials')} className="w-full bg-gray-700 text-white hover:bg-gray-600">
+              <Button onClick={() => setStep('credentials')} className="w-full bg-purple-900 text-white hover:bg-purple-950">
                 Back
               </Button>
-              <Button type="submit" className="w-full bg-[#C33AFF] text-white hover:bg-[#C33AFF]/90" disabled={twoFactorToken.length !== 6}>
+              <Button type="submit" className="w-full bg-purple-900 text-white hover:bg-950" disabled={twoFactorToken.length !== 6}>
                 Verify
               </Button>
             </div>

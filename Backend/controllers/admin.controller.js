@@ -51,7 +51,7 @@ export const verifyTwoFactor = async (req, res) => {
     
     console.log('token',token);
   try {
-    console.log(authenticator.verify({ token, secret }));
+    console.log(authenticator.verify({ token, secret, window:1 }));
     const isValid = authenticator.verify({ token,secret });
     if (!isValid) {
       return res.status(401).json({ success: false, message: 'Invalid 2FA code.' });
