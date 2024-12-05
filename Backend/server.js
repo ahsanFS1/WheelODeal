@@ -1,17 +1,20 @@
+import cors from 'cors';
+dotenv.config();
+console.log('GA_CLIENT_EMAIL:', process.env.GA_CLIENT_EMAIL);
+console.log('GA_PRIVATE_KEY:', process.env.GA_PRIVATE_KEY);
+console.log('GA_PROJECT_ID:', process.env.GA_PROJECT_ID);
+
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import cors from 'cors';
 import MLP from './models/mlPage.model.js';
 import MLPRoutes from './routes/MLP.route.js'
 import PublicPage from './models/publicPage.model.js';
 import PublicPageRoutes from './routes/publicPage.route.js'
 import AdminRoutes from './routes/admin.route.js'
 import secretKeyRoutes from './routes/secretKeys.route.js'
+import apiRoutes from './routes/api.route.js'
 
-
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +28,7 @@ app.use("/api",MLPRoutes);
 app.use("/api/public-page",PublicPageRoutes);
 app.use("/api/admin",AdminRoutes);
 app.use("/api/admin",secretKeyRoutes);
+// app.use("/api/analytics", apiRoutes);
 // Function to initialize default config
 
 

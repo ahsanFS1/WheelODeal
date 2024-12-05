@@ -6,6 +6,7 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { LoginForm } from './components/auth/LoginForm';
 import { UserDashboard } from './components/UserDashboard';
 import { useAuthStore } from './store/authStore';
+import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard';
 
 // Protected Route component
 // const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -51,7 +52,15 @@ export default function App() {
         }
       
       />
+       <Route
+        path = "/analytics"
+        element = {
+          <AnalyticsDashboard
+          
+          pageId='1'/>
+        }
       
+      />
       
         
       </Routes>

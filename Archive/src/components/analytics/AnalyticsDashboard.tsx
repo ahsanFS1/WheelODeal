@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -27,7 +27,7 @@ interface Props {
 }
 
 export const AnalyticsDashboard: React.FC<Props> = ({ pageId }) => {
-  const [metrics, setMetrics] = React.useState({
+  const [metrics, setMetrics] = useState({
     visitors: 0,
     spins: 0,
     conversions: 0,
@@ -40,45 +40,34 @@ export const AnalyticsDashboard: React.FC<Props> = ({ pageId }) => {
     }
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchMetrics = async () => {
-      const endDate = new Date();
+      const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 30);
 
-      const data = await analytics.getPageMetrics(pageId, startDate, endDate);
-      setMetrics(data);
+      const response = await fetch(`/api/analytics?pageId=${pageId}&startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setMetrics(result.data);
+      } else {
+        console.error('Error fetching metrics:', result.message);
+      }
     };
 
     fetchMetrics();
-    const interval = setInterval(fetchMetrics, 300000); // Refresh every 5 minutes
-
-    return () => clearInterval(interval);
   }, [pageId]);
 
   const chartData = {
     labels: metrics.history.labels,
     datasets: [
-      {
-        label: 'Visitors',
-        data: metrics.history.visitors,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1
-      },
-      {
-        label: 'Spins',
-        data: metrics.history.spins,
-        borderColor: 'rgb(153, 102, 255)',
-        tension: 0.1
-      },
-      {
-        label: 'Conversions',
-        data: metrics.history.conversions,
-        borderColor: 'rgb(255, 99, 132)',
-        tension: 0.1
-      }
+      { label: 'Visitors', data: metrics.history.visitors, borderColor: 'rgb(75, 192, 192)', tension: 0.1 },
+      { label: 'Spins', data: metrics.history.spins, borderColor: 'rgb(153, 102, 255)', tension: 0.1 },
+      { label: 'Conversions', data: metrics.history.conversions, borderColor: 'rgb(255, 99, 132)', tension: 0.1 },
     ]
   };
+
 
   return (
     <div className="space-y-6">

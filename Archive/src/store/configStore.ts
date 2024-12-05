@@ -298,7 +298,7 @@ export const usePublicPageConStore = create((set) => ({
   fetchPublicPage: async () => {
     console.log("Fetching public page...");
     try {
-      const res = await fetch('/api/'); // Adjust endpoint as needed
+      const res = await fetch('http://localhost:5000/api/'); // Adjust endpoint as needed
       const data = await res.json();
       if (data.success) {
         set({ publicPage: data.data });
