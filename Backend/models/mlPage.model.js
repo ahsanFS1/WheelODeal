@@ -248,7 +248,7 @@ const MLPSchema = new mongoose.Schema(
       finalCta: {
         title: { type: String, required: true, default: "Ready to Boost Your Engagement?" },
         buttonText: { type: String, required: true, default: "Get Started Now" },
-        buttonLink: { type: String, required: true, default: "/signup" },
+        buttonLink: { type: String, required: true, default: "/login-form" },
         buttonColor: { type: String, required: true, default: "#C33AFF" },
         buttonTextColor: { type: String, required: true, default: "#FFFFFF" },
         guarantee: { type: String, required: true, default: "30-day money-back guarantee" },

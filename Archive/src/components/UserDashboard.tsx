@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import * as Tabs from '@radix-ui/react-tabs';
 import { Button } from './ui/button';
@@ -12,22 +13,21 @@ import { AnalyticsDashboard } from './analytics/AnalyticsDashboard';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
+import { useParams } from 'react-router-dom'; // Import for accessing route parameters
+
 export const UserDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { projectId } = useParams(); // Access projectId from URL
   const [config, setConfig] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false); // Define showPreview state
   const [isFetching, setIsFetching] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
 
   // Fetch configuration from the backend API
   useEffect(() => {
-
-    
-
-
     const fetchConfig = async () => {
       try {
         setIsFetching(true);
-        const response = await fetch('/api/public-page'); // Replace with your API endpoint
+        const response = await fetch(`/api/public-page/${projectId}`); // Use projectId in API call
         const data = await response.json();
         if (data.success) {
           setConfig(data.data);
@@ -42,12 +42,15 @@ export const UserDashboard: React.FC = () => {
       }
     };
 
-    fetchConfig();
-  }, []);
+    if (projectId) {
+      fetchConfig();
+    }
+  }, [projectId]); // Re-fetch if projectId changes
 
+  // Save configuration changes
   const handleSave = async () => {
     try {
-      const response = await fetch('/api/public-page/update', {
+      const response = await fetch(`/api/public-page/${projectId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
@@ -63,7 +66,6 @@ export const UserDashboard: React.FC = () => {
       toast.error('Error saving configuration.');
     }
   };
-
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
       navigate('/');
@@ -382,7 +384,7 @@ export const UserDashboard: React.FC = () => {
 <Tabs.Content value="preview" className="space-y-8">
   <div className="bg-[#1B1B21] rounded-lg shadow-lg p-6">
     <iframe
-      src="/public-page"
+      src= {`/wheel/${projectId}`}
       className="w-full h-[800px] rounded-lg border border-[#C33AFF]/20"
       title="Page Preview"
     />

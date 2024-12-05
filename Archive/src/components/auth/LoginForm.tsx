@@ -29,7 +29,7 @@ export const LoginForm: React.FC = () => {
       }
 
       // Key is valid, extract plan and projectName
-      const { plan, projectName } = data.data;
+      const { plan, projectName ,projectId} = data.data;
 
       const token = btoa(
         JSON.stringify({
@@ -45,7 +45,7 @@ export const LoginForm: React.FC = () => {
       sessionStorage.setItem('userToken', token);
 
       toast.success('Login successful!');
-      navigate('/user-dashboard');
+      navigate(`/user-dashboard/${projectId}`);
     } catch (err) {
       console.error('Error validating secret key:', err);
       setError('An error occurred. Please try again later.');

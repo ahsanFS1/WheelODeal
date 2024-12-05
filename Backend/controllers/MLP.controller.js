@@ -30,8 +30,7 @@ export const getMLP =  async (req, res) => {
       initializeDefaultConfig();
       const mlP = await MLP.findOne(); // Fetch the main landing page configuration
       res.status(200).json({ success: true, data: mlP });
-      console.log('Fetched MLP');
-      console.log(mlP);
+      
 
       
     } catch (error) {

@@ -6,6 +6,7 @@ interface SecretKey {
   _id: string;
   secretKey: string;
   projectName: string;
+  projectId: string; // Added projectId
   plan: string;
   expiryDate: string;
 }
@@ -25,7 +26,7 @@ export const SecretKeyManager: React.FC = () => {
         setSecretKeys(data.data);
       }
     } catch (error) {
-      console.error("Error fetching secret keys:", error.message);
+      console.error('Error fetching secret keys:', error.message);
     }
   };
 
@@ -58,7 +59,7 @@ export const SecretKeyManager: React.FC = () => {
         setExpiryDate('');
       }
     } catch (error) {
-      console.error("Error creating secret key:", error.message);
+      console.error('Error creating secret key:', error.message);
     }
   };
 
@@ -72,7 +73,7 @@ export const SecretKeyManager: React.FC = () => {
           setSecretKeys((prev) => prev.filter((key) => key._id !== id));
         }
       } catch (error) {
-        console.error("Error deleting secret key:", error.message);
+        console.error('Error deleting secret key:', error.message);
       }
     }
   };
@@ -132,7 +133,10 @@ export const SecretKeyManager: React.FC = () => {
                 </h3>
                 <div className="space-y-1">
                   <code className="block bg-[#1B1B21] px-2 py-1 rounded text-sm font-mono text-[#D3D3DF]">
-                    {secretKey.secretKey}
+                    Secret Key: {secretKey.secretKey}
+                  </code>
+                  <code className="block px-2 py-1 rounded text-sm font-mono text-[#D3D3DF]">
+                    Project ID: {secretKey.projectId}
                   </code>
                   <p className="text-sm text-[#D3D3DF]/60">
                     Plan: {secretKey.plan}
@@ -140,6 +144,12 @@ export const SecretKeyManager: React.FC = () => {
                   <p className="text-sm text-[#D3D3DF]/60">
                     Expires: {new Date(secretKey.expiryDate).toLocaleDateString()}
                   </p>
+                  <p className="text-sm text-[#D3D3DF]/60 ">
+                  Link for the Public Page:
+                  </p>
+                  <code className="block  px-2 py-1 rounded text-sm font-mono text-[#D3D3DF]">
+                  http://localhost:5173/wheel/{secretKey.projectId}
+                  </code>
                 </div>
               </div>
               <Button

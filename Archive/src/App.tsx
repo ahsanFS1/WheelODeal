@@ -41,26 +41,19 @@ export default function App() {
             // <ProtectedRoute>
               <LoginForm />
             // </ProtectedRoute>
-          } 
-       
-          
-            
-           
+          }
         />
-        <Route 
-          path="/user-dashboard" 
-          element={
-            // <ProtectedRoute>
-              <UserDashboard />
-          //  </ProtectedRoute>
-          }               
-        />
-        <Route 
-          path="/public-page" 
-          element={
-            <PublicPage />
-          } 
-        />
+
+      <Route
+        path = "/user-dashboard/:projectId"
+        element = {
+          <UserDashboard />
+        }
+      
+      />
+      
+      
+        
       </Routes>
     </BrowserRouter>
   );

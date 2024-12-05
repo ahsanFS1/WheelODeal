@@ -1,41 +1,40 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { SpinningWheel } from './SpinningWheel';
 import { SpinResult } from '../types';
 import { Carousel } from './carousel/Carousel';
 import { CountdownTimer } from './CountdownTimer';
 import confetti from 'canvas-confetti';
-import { LuxuryWheel } from './wheel/LuxuryWheel';
 
 export const PublicPage: React.FC = () => {
-  // Local state for fetched config and loading state
+  const { projectId } = useParams(); // Extract projectId from URL
   const [config, setConfig] = useState<any>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [spinResult, setSpinResult] = useState<SpinResult | null>(null);
   const [bonusCode] = useState('20CHRISTMAS');
   const [expiryTime] = useState(Date.now() + 24 * 60 * 60 * 1000); // 24 hours expiry time
 
-  // Fetch config data when component mounts
   useEffect(() => {
+    console.log(projectId);
     const fetchData = async () => {
       try {
-        console.log('Starting fetch...');
         setIsFetching(true);
-        const res = await fetch('/api/public-page'); // Adjust API endpoint as necessary
+        const res = await fetch(`/api/public-page/${projectId}`); // Fetch data using projectId
         const data = await res.json();
         if (data.success) {
-          setConfig(data.data); // Set the fetched data to state
+          setConfig(data.data);
         } else {
           console.error('Failed to fetch public page:', data.message);
         }
-        setIsFetching(false);
       } catch (error) {
         console.error('Error during fetch:', error);
+      } finally {
         setIsFetching(false);
       }
     };
 
-    fetchData(); // Call the function to fetch data on mount
-  }, []); // Empty dependency array ensures this runs once when the component mounts
+    fetchData();
+  }, [projectId]); // Re-fetch if projectId changes
 
   const handleSpinEnd = (result: SpinResult) => {
     setSpinResult(result);
@@ -52,12 +51,10 @@ export const PublicPage: React.FC = () => {
     }
   };
 
-  // If config data is not yet fetched, display loading state
   if (isFetching) {
     return <div>Loading...</div>;
   }
 
-  // If config is not available after fetching, display error
   if (!config) {
     return <div>Failed to load page configuration.</div>;
   }

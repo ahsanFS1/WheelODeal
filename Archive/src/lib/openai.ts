@@ -1,11 +1,11 @@
 import OpenAI from 'openai';
-
+import.meta.env.apiKey
 export class OpenAIClient {
   private openai: OpenAI;
 
   constructor() {
     this.openai = new OpenAI({
-      apiKey: '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',
+      apiKey:
     });
   }
 

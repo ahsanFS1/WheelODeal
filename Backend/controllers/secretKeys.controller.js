@@ -1,4 +1,7 @@
 import SecretKey from "../models/secretKeys.model.js";
+import PublicPage from "../models/publicPage.model.js";
+import crypto from 'crypto';
+
 
 // Get all secret keys
 export const getSecretKeys = async (req, res) => {
@@ -11,25 +14,41 @@ export const getSecretKeys = async (req, res) => {
   }
 };
 
+
+
+
 // Create a new secret key
 export const createSecretKey = async (req, res) => {
   const { projectName, plan, expiryDate } = req.body;
 
   try {
+    // Generate a unique projectId by hashing the projectName
+    const projectId = crypto.createHash('sha256').update(projectName).digest('hex');
+
+    // Generate a random secret key
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
     let secretKey = '';
     for (let i = 0; i < 16; i++) {
       secretKey += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
+    // Create and save the new secret key
     const newKey = new SecretKey({
       secretKey,
       projectName,
+      projectId,
       plan,
       expiryDate,
     });
-
     await newKey.save();
+
+    // Create a new PublicPage with default values and the generated projectId
+    const newPublicPage = new PublicPage({
+      projectId,
+     
+    });
+    await newPublicPage.save();
+
     res.status(201).json({ success: true, data: newKey });
   } catch (error) {
     console.error("Error creating secret key:", error.message);

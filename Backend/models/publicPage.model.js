@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 
 
 const PublicPageSchema = new mongoose.Schema({
+  projectId: {type: String, required: true},
   backgroundColor: { type: String, required: true, default: "#121218" },
   logo: {
     type: String,

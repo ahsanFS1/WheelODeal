@@ -1,52 +1,45 @@
 import PublicPage from '../models/publicPage.model.js';
 
-// Fetch PublicPage configuration
+// Fetch PublicPage configuration by projectId
 export const getPP = async (req, res) => {
-  // Helper function to initialize default configuration
-  const initializeDefaultConfig = async () => {
-    try {
-      const existingConfig = await PublicPage.findOne();
-      if (!existingConfig) {
-        await PublicPage.create({}); // Create an empty PublicPage with default values
-        console.log('Default configuration for PublicPage initialized.');
-      } else {
-        console.log('Default configuration for PublicPage already exists.');
-      }
-    } catch (err) {
-      console.error('Error initializing default configuration for PublicPage:', err.message);
-    }
-  };
+  const { projectId } = req.params;
 
   try {
-    console.log('Fetching PublicPage');
-    // Fetch the main landing page configuration
-    const publicPageData = await PublicPage.findOne();
+    console.log(`Fetching PublicPage for projectId: ${projectId}`);
+    const publicPageData = await PublicPage.findOne({ projectId });
+
     if (!publicPageData) {
-      await initializeDefaultConfig(); // Initialize default config if none exists
+      console.log(`No PublicPage found for projectId: ${projectId}`);
+      return res.status(404).json({ success: false, message: 'PublicPage not found.' });
     }
+
     res.status(200).json({ success: true, data: publicPageData });
-    console.log('Fetched PublicPage');
+    console.log(`Fetched PublicPage for projectId: ${projectId}`);
   } catch (error) {
-    console.error('Error fetching the Public Page', error);
+    console.error(`Error fetching the PublicPage for projectId: ${projectId}`, error);
     res.status(500).json({ success: false, message: 'Error fetching the PublicPage data.' });
   }
 };
 
-// Update PublicPage configuration
+
+// Update PublicPage configuration by projectId
 export const updatePP = async (req, res) => {
+  const { projectId } = req.params;
   const updatedData = req.body;
 
   try {
-    console.log('Updating PublicPage');
+    console.log(`Updating PublicPage for projectId: ${projectId}`);
     const publicPageData = await PublicPage.findOneAndUpdate(
-      {}, // Find the first (and only) document
-      { $set: updatedData }, // Update with the data provided in the request body
-      { new: true, upsert: true } // Return the updated document and create it if it doesn't exist
+      { projectId },
+      { $set: updatedData },
+      { new: true, upsert: true } // Return the updated document; create if it doesn't exist
     );
+
     res.status(200).json({ success: true, data: publicPageData });
-    console.log('Updated PublicPage');
+    console.log(`Updated PublicPage for projectId: ${projectId}`);
   } catch (error) {
-    console.error('Error updating the Public Page', error);
+    console.error(`Error updating the PublicPage for projectId: ${projectId}`, error);
     res.status(500).json({ success: false, message: 'Error updating the PublicPage data.' });
   }
 };
+
