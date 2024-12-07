@@ -35,19 +35,17 @@ export const PublicPage: React.FC = () => {
       script.onload = () => {
         console.log('Google Analytics script loaded.');
         window.dataLayer = window.dataLayer || [];
-        window.gtag = function gtag(){dataLayer.push(arguments);}
-      
-        console.log('window.gtag initialized:', typeof window.gtag);
-      
+        window.gtag = function gtag() { window.dataLayer.push(arguments); };
+
         // Track initial pageview
         window.gtag('js', new Date());
         window.gtag('config', measurementId, {
           page_path: `/wheel/${projectId}`,
-          debug_mode: true, // Enable debug mode
+          debug_mode: true,
         });
         console.log('Pageview tracked for:', `/wheel/${projectId}`);
       };
-      
+
       script.onerror = () => {
         console.error('Failed to load Google Analytics script.');
       };
@@ -64,17 +62,17 @@ export const PublicPage: React.FC = () => {
       try {
         const response = await fetch(`/api/public-page/${projectId}`);
         const data = await response.json();
-  
+
         if (data.success) {
-          console.log('Configuration fetched successfully:', data);
           setConfig(data.data);
+
           if (window.gtag) {
             console.log('Tracking page load event');
             window.gtag('event', 'page_loaded', {
               event_category: 'PublicPage',
               event_label: `PublicPage_${projectId}`,
               page_path: `/wheel/${projectId}`,
-              debug_mode: true, // Ensure debug mode is enabled for events
+              debug_mode: true,
             });
           }
         } else {
@@ -86,47 +84,84 @@ export const PublicPage: React.FC = () => {
         setIsFetching(false);
       }
     };
-  
+
     fetchData();
   }, [projectId]);
-  
+
   // Handle the end of a spin
-  const handleSpinEnd = (result: SpinResult) => {
-    setSpinResult(result);
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
+// Handle the end of a spin
+const handleSpinEnd = async (result: SpinResult) => {
+  setSpinResult(result);
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6 },
+  });
+
+  // Track the spin event in Google Analytics
+  if (window.gtag) {
+    window.gtag('event', 'spin_completed', {
+      event_category: 'SpinningWheel',
+      event_label: `Prize_${result.prize.text}`,
+      value: result.prize.text,
+      debug_mode: true,
+    });
+  }
+
+  // Save the prize to the backend
+  try {
+    const response = await fetch('/api/prizes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        pageId: projectId, // Pass the project/page ID
+        prizeName: result.prize.text, // Pass the prize name
+      }),
     });
 
-    // Track spin event
-    if (window.gtag) {
-      window.gtag('event', 'spin_completed', {
-        event_category: 'SpinningWheel',
-        event_label: `Prize_${result.prize.text}`,
-        value: result.prize.text,
-        debug_mode: true, // Ensure debug mode is enabled for events
-      });
-      console.log('Spin event tracked:', result.prize.text);
+    const data = await response.json();
+
+    if (data.success) {
+      console.log(`Prize "${result.prize.text}" saved successfully for pageId "${projectId}".`);
+    } else {
+      console.error('Failed to save the prize:', data.message);
     }
-  };
+  } catch (error) {
+    console.error('Error saving the prize:', error);
+  }
+};
+
 
   // Handle claim button click
   const handleClaim = () => {
     if (spinResult) {
-      // Track claim event
       if (window.gtag) {
         window.gtag('event', 'prize_claimed', {
           event_category: 'SpinningWheel',
           event_label: `Prize_${spinResult.prize.text}`,
           value: spinResult.prize.text,
-          debug_mode: true, // Ensure debug mode is enabled for events
+          debug_mode: true,
         });
-        console.log('Claim event tracked:', spinResult.prize.text);
       }
 
-      // Open the claim URL
+      
       window.open(spinResult.prize.redirectUrl, '_blank', 'noopener,noreferrer');
+
+      
+
+    }
+  };
+
+  // Track carousel interactions
+  const handleCarouselInteraction = (action: string, imageIndex: number) => {
+    if (window.gtag) {
+      window.gtag('event', 'carousel_interaction', {
+        event_category: 'Carousel',
+        event_action: action,
+        event_label: `ImageIndex_${imageIndex}`,
+      });
     }
   };
 
@@ -137,6 +172,7 @@ export const PublicPage: React.FC = () => {
   if (!config) {
     return <div>Failed to load page configuration.</div>;
   }
+
   return (
     <div className="min-h-screen bg-[#121218] text-white">
       {/* Header Section */}

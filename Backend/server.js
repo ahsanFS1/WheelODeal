@@ -14,7 +14,7 @@ import PublicPageRoutes from './routes/publicPage.route.js'
 import AdminRoutes from './routes/admin.route.js'
 import secretKeyRoutes from './routes/secretKeys.route.js'
 import apiRoutes from './routes/api.route.js'
-
+import PrizeRoutes from './routes/prizes.route.js'
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,6 +29,7 @@ app.use("/api/public-page",PublicPageRoutes);
 app.use("/api/admin",AdminRoutes);
 app.use("/api/admin",secretKeyRoutes);
 app.use("/api", apiRoutes);
+app.use("/api",PrizeRoutes)
 // Function to initialize default config
 
 

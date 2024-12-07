@@ -6,41 +6,51 @@ import { CarouselImage } from '../../types';
 interface Props {
   images: CarouselImage[];
   autoPlayInterval?: number;
+  onInteraction?: (action: string, index: number) => void; // Optional callback for tracking interactions
 }
 
-export const Carousel: React.FC<Props> = ({ images, autoPlayInterval = 5000 }) => {
+export const Carousel: React.FC<Props> = ({ images, autoPlayInterval = 5000, onInteraction }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Auto-play effect
   useEffect(() => {
-    console.log("Carousel images:", images); // Debug: Check if images are correctly received
-
     if (images.length <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((current) => (current + 1) % images.length);
+      const newIndex = (currentIndex + 1) % images.length;
+      setCurrentIndex(newIndex);
+      onInteraction?.('auto_play', newIndex); // Track auto-play interaction
     }, autoPlayInterval);
 
     return () => clearInterval(interval);
-  }, [images.length, autoPlayInterval]);
+  }, [images.length, currentIndex, autoPlayInterval, onInteraction]);
 
   const handlePrevious = () => {
-    setCurrentIndex((current) => (current - 1 + images.length) % images.length);
+    const newIndex = (currentIndex - 1 + images.length) % images.length;
+    setCurrentIndex(newIndex);
+    onInteraction?.('previous', newIndex); // Track previous button click
   };
 
   const handleNext = () => {
-    setCurrentIndex((current) => (current + 1) % images.length);
+    const newIndex = (currentIndex + 1) % images.length;
+    setCurrentIndex(newIndex);
+    onInteraction?.('next', newIndex); // Track next button click
   };
 
-  // Check if there are no images to display
+  const handleDotClick = (index: number) => {
+    setCurrentIndex(index);
+    onInteraction?.('dot_click', index); // Track dot navigation
+  };
+
+  // Log a warning if no images are provided
   if (!images.length) {
-    console.error("No images provided to the Carousel component.");
+    console.error('No images provided to the Carousel component.');
     return null;
   }
 
-  console.log("Current Index:", currentIndex); // Debug: Check if currentIndex updates properly
-
   return (
-    <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-red-500"> {/* Added border for visual debugging */}
+    <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+      {/* Animated image transitions */}
       <AnimatePresence mode="wait">
         <motion.img
           key={currentIndex}
@@ -54,6 +64,7 @@ export const Carousel: React.FC<Props> = ({ images, autoPlayInterval = 5000 }) =
         />
       </AnimatePresence>
 
+      {/* Navigation buttons */}
       {images.length > 1 && (
         <>
           <button
@@ -69,11 +80,12 @@ export const Carousel: React.FC<Props> = ({ images, autoPlayInterval = 5000 }) =
             <ChevronRight className="w-6 h-6" />
           </button>
 
+          {/* Navigation dots */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
             {images.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentIndex(index)}
+                onClick={() => handleDotClick(index)}
                 className={`w-2 h-2 rounded-full transition-colors ${
                   index === currentIndex ? 'bg-white' : 'bg-white/50'
                 }`}

@@ -42,6 +42,7 @@ class GoogleAnalyticsClient {
       const property = `properties/${process.env.GA_PROPERTY_ID}`;
       console.log(`Fetching metrics for property: ${property}, pageId: ${pageId}, startDate: ${startDate}, endDate: ${endDate}`);
   
+      // Single query for all metrics and dimensions
       const response = await this.analyticsdata.properties.runReport({
         property,
         requestBody: {
@@ -49,11 +50,11 @@ class GoogleAnalyticsClient {
           metrics: [{ name: 'activeUsers' }, { name: 'eventCount' }],
           dimensions: [
             { name: 'eventName' },
-            { name: 'pagePath' }, // Use correct dimension name
+            { name: 'pagePath' },
           ],
           dimensionFilter: {
             filter: {
-              fieldName: 'pagePath', // Use correct field name
+              fieldName: 'pagePath',
               stringFilter: {
                 value: `/wheel/${pageId}`,
               },
@@ -67,10 +68,9 @@ class GoogleAnalyticsClient {
       const rows = response.data.rows || [];
       if (rows.length === 0) {
         console.warn('No data returned for the query. Verify filters and event processing.');
-      } else {
-        console.log('Matched Rows:', JSON.stringify(rows, null, 2));
       }
   
+      // Parse metrics from rows
       const getMetricValue = (eventName, metricIndex = 0) => {
         const row = rows.find((row) => row.dimensionValues?.[0]?.value === eventName);
         return row?.metricValues?.[metricIndex]?.value || '0';
@@ -80,6 +80,10 @@ class GoogleAnalyticsClient {
         visitors: parseInt(getMetricValue('page_loaded')),
         spins: parseInt(getMetricValue('spin_completed')),
         conversions: parseInt(getMetricValue('prize_claimed')),
+        spinConversionRate:
+          (parseInt(getMetricValue('spin_completed')) /
+            parseInt(getMetricValue('page_loaded'))) *
+          100 || 0,
       };
   
       console.log('Parsed Metrics:', metrics);
@@ -90,9 +94,12 @@ class GoogleAnalyticsClient {
         visitors: 0,
         spins: 0,
         conversions: 0,
+        spinConversionRate: 0,
       };
     }
   }
+  
+  
   
 }
 
