@@ -28,7 +28,7 @@ app.use("/api",MLPRoutes);
 app.use("/api/public-page",PublicPageRoutes);
 app.use("/api/admin",AdminRoutes);
 app.use("/api/admin",secretKeyRoutes);
-// app.use("/api/analytics", apiRoutes);
+app.use("/api", apiRoutes);
 // Function to initialize default config
 
 

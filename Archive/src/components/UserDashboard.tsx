@@ -390,7 +390,12 @@ export const UserDashboard: React.FC = () => {
     />
   </div>
 </Tabs.Content>
-
+ {/* Analytics Tab */}
+ <Tabs.Content value="analytics" className="space-y-8">
+            <div className="bg-[#1B1B21] rounded-lg shadow-lg p-6">
+              <AnalyticsDashboard  pageId={projectId || 'defaultPageId'} /> 
+            </div>
+</Tabs.Content>
 
 
 </Tabs.Root>

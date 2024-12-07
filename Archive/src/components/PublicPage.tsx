@@ -13,18 +13,72 @@ export const PublicPage: React.FC = () => {
   const [spinResult, setSpinResult] = useState<SpinResult | null>(null);
   const [bonusCode] = useState('20CHRISTMAS');
   const [expiryTime] = useState(Date.now() + 24 * 60 * 60 * 1000); // 24 hours expiry time
+  const measurementId = 'G-28B7K98MKT'; // Replace with your GA4 Measurement ID
 
+  // Load gtag.js dynamically
   useEffect(() => {
-    console.log(projectId);
+    const loadGtag = () => {
+      const existingScript = document.querySelector(
+        `script[src="https://www.googletagmanager.com/gtag/js?id=${measurementId}"]`
+      );
+
+      if (existingScript) {
+        console.log('Google Analytics script already loaded.');
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+      document.head.appendChild(script);
+
+      script.onload = () => {
+        console.log('Google Analytics script loaded.');
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function gtag(){dataLayer.push(arguments);}
+      
+        console.log('window.gtag initialized:', typeof window.gtag);
+      
+        // Track initial pageview
+        window.gtag('js', new Date());
+        window.gtag('config', measurementId, {
+          page_path: `/wheel/${projectId}`,
+          debug_mode: true, // Enable debug mode
+        });
+        console.log('Pageview tracked for:', `/wheel/${projectId}`);
+      };
+      
+      script.onerror = () => {
+        console.error('Failed to load Google Analytics script.');
+      };
+    };
+
+    loadGtag();
+  }, [projectId, measurementId]);
+
+  // Fetch public page configuration
+  useEffect(() => {
     const fetchData = async () => {
+      console.log('Fetching configuration for PublicPage');
+      setIsFetching(true);
       try {
-        setIsFetching(true);
-        const res = await fetch(`/api/public-page/${projectId}`); // Fetch data using projectId
-        const data = await res.json();
+        const response = await fetch(`/api/public-page/${projectId}`);
+        const data = await response.json();
+  
         if (data.success) {
+          console.log('Configuration fetched successfully:', data);
           setConfig(data.data);
+          if (window.gtag) {
+            console.log('Tracking page load event');
+            window.gtag('event', 'page_loaded', {
+              event_category: 'PublicPage',
+              event_label: `PublicPage_${projectId}`,
+              page_path: `/wheel/${projectId}`,
+              debug_mode: true, // Ensure debug mode is enabled for events
+            });
+          }
         } else {
-          console.error('Failed to fetch public page:', data.message);
+          console.error('Failed to fetch configuration:', data.message);
         }
       } catch (error) {
         console.error('Error during fetch:', error);
@@ -32,10 +86,11 @@ export const PublicPage: React.FC = () => {
         setIsFetching(false);
       }
     };
-
+  
     fetchData();
-  }, [projectId]); // Re-fetch if projectId changes
-
+  }, [projectId]);
+  
+  // Handle the end of a spin
   const handleSpinEnd = (result: SpinResult) => {
     setSpinResult(result);
     confetti({
@@ -43,10 +98,34 @@ export const PublicPage: React.FC = () => {
       spread: 70,
       origin: { y: 0.6 },
     });
+
+    // Track spin event
+    if (window.gtag) {
+      window.gtag('event', 'spin_completed', {
+        event_category: 'SpinningWheel',
+        event_label: `Prize_${result.prize.text}`,
+        value: result.prize.text,
+        debug_mode: true, // Ensure debug mode is enabled for events
+      });
+      console.log('Spin event tracked:', result.prize.text);
+    }
   };
 
+  // Handle claim button click
   const handleClaim = () => {
     if (spinResult) {
+      // Track claim event
+      if (window.gtag) {
+        window.gtag('event', 'prize_claimed', {
+          event_category: 'SpinningWheel',
+          event_label: `Prize_${spinResult.prize.text}`,
+          value: spinResult.prize.text,
+          debug_mode: true, // Ensure debug mode is enabled for events
+        });
+        console.log('Claim event tracked:', spinResult.prize.text);
+      }
+
+      // Open the claim URL
       window.open(spinResult.prize.redirectUrl, '_blank', 'noopener,noreferrer');
     }
   };
@@ -58,7 +137,6 @@ export const PublicPage: React.FC = () => {
   if (!config) {
     return <div>Failed to load page configuration.</div>;
   }
-
   return (
     <div className="min-h-screen bg-[#121218] text-white">
       {/* Header Section */}

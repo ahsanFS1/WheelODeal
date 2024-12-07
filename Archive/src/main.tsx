@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-// Create root element if it doesn't exist
+
+// React application rendering
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   const root = document.createElement('div');

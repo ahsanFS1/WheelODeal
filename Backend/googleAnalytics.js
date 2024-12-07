@@ -24,39 +24,66 @@ class GoogleAnalyticsClient {
       scopes: ['https://www.googleapis.com/auth/analytics.readonly'],
     });
 
-    // Use the Google Analytics Data API (v1) instead of legacy analytics (v4)
-   
-(async () => {
-    const analyticsdata = google.analyticsdata({
-      version: 'v1',
+    this.analyticsdata = google.analyticsdata({
+      version: 'v1beta',
       auth,
     });
-    });
+
+    console.log('GoogleAnalyticsClient initialized successfully');
+
+    // Validate credentials
+    auth.getClient()
+      .then(() => console.log('API Credentials are valid'))
+      .catch((error) => console.error('Invalid API Credentials:', error.message));
   }
 
-  async getMetrics(propertyId, startDate, endDate) {
+  async getMetrics(pageId, startDate, endDate) {
     try {
+      const property = `properties/${process.env.GA_PROPERTY_ID}`;
+      console.log(`Fetching metrics for property: ${property}, pageId: ${pageId}, startDate: ${startDate}, endDate: ${endDate}`);
+  
       const response = await this.analyticsdata.properties.runReport({
-        property: `properties/${propertyId}`,
+        property,
         requestBody: {
           dateRanges: [{ startDate, endDate }],
           metrics: [{ name: 'activeUsers' }, { name: 'eventCount' }],
-          dimensions: [{ name: 'eventName' }],
+          dimensions: [
+            { name: 'eventName' },
+            { name: 'pagePath' }, // Use correct dimension name
+          ],
+          dimensionFilter: {
+            filter: {
+              fieldName: 'pagePath', // Use correct field name
+              stringFilter: {
+                value: `/wheel/${pageId}`,
+              },
+            },
+          },
         },
       });
-
+  
+      console.log('API Response:', JSON.stringify(response.data, null, 2));
+  
       const rows = response.data.rows || [];
-      return {
-        visitors: parseInt(
-          rows.find((row) => row.dimensionValues[0].value === 'activeUsers')?.metricValues[0].value || '0'
-        ),
-        spins: parseInt(
-          rows.find((row) => row.dimensionValues[0].value === 'spin')?.metricValues[0].value || '0'
-        ),
-        conversions: parseInt(
-          rows.find((row) => row.dimensionValues[0].value === 'conversion')?.metricValues[0].value || '0'
-        ),
+      if (rows.length === 0) {
+        console.warn('No data returned for the query. Verify filters and event processing.');
+      } else {
+        console.log('Matched Rows:', JSON.stringify(rows, null, 2));
+      }
+  
+      const getMetricValue = (eventName, metricIndex = 0) => {
+        const row = rows.find((row) => row.dimensionValues?.[0]?.value === eventName);
+        return row?.metricValues?.[metricIndex]?.value || '0';
       };
+  
+      const metrics = {
+        visitors: parseInt(getMetricValue('page_loaded')),
+        spins: parseInt(getMetricValue('spin_completed')),
+        conversions: parseInt(getMetricValue('prize_claimed')),
+      };
+  
+      console.log('Parsed Metrics:', metrics);
+      return metrics;
     } catch (error) {
       console.error('Error fetching GA4 metrics:', error.response?.data || error.message);
       return {
@@ -66,11 +93,7 @@ class GoogleAnalyticsClient {
       };
     }
   }
-
-  trackEvent(propertyId, eventName) {
-    console.error('Event tracking is not implemented in GA4 Data API.');
-    // GA4 Data API does not currently support event tracking via API.
-  }
+  
 }
 
 export default GoogleAnalyticsClient;
