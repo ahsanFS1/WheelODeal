@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Key } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { UserDashboard } from '../UserDashboard';
 export const LoginForm: React.FC = () => {
   const [secretKey, setSecretKey] = useState('');
   const [error, setError] = useState('');
@@ -45,6 +45,7 @@ export const LoginForm: React.FC = () => {
       sessionStorage.setItem('userToken', token);
 
       toast.success('Login successful!');
+      
       navigate(`/user-dashboard/${projectId}`);
     } catch (err) {
       console.error('Error validating secret key:', err);
