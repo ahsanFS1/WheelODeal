@@ -69,7 +69,7 @@ export const AnalyticsDashboard: React.FC<Props> = ({ pageId }) => {
         if (analyticsResult.success) {
           setMetrics((prevMetrics) => ({
             ...prevMetrics,
-            totalVisitors: analyticsResult.data?.visitors || 0,
+            totalVisitors: analyticsResult.data?.pageVisited || 0,
             uniqueVisitors: analyticsResult.data?.visitors || 0,
             spins: analyticsResult.data?.spins || 0,
             spinConversionRate: analyticsResult.data?.spinConversionRate || 0,
@@ -111,19 +111,19 @@ export const AnalyticsDashboard: React.FC<Props> = ({ pageId }) => {
     datasets: [
       {
         label: 'page_loaded',
-        data: metrics.totalVisitors || [],
+        data: metrics?.history.visitors || [],
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1,
       },
       {
         label: 'spin_completed',
-        data: metrics.spins || [],
+        data: metrics?.history.spins || [],
         borderColor: 'rgb(153, 102, 255)',
         tension: 0.1,
       },
       {
         label: 'prize_claimed',
-        data: metrics.prizes_claimed || [],
+        data: metrics?.history.conversions || [],
         borderColor: 'rgb(255, 99, 132)',
         tension: 0.1,
       },
@@ -134,7 +134,7 @@ export const AnalyticsDashboard: React.FC<Props> = ({ pageId }) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-[#2B2B33] p-4 rounded-lg text-center">
-          <h4 className="text-sm text-gray-400">Total Visitors</h4>
+          <h4 className="text-sm text-gray-400">Page Visited</h4>
           <p className="text-lg font-semibold text-white">{metrics.totalVisitors}</p>
         </div>
         <div className="bg-[#2B2B33] p-4 rounded-lg text-center">

@@ -47,7 +47,11 @@ class GoogleAnalyticsClient {
         property,
         requestBody: {
           dateRanges: [{ startDate, endDate }],
-          metrics: [{ name: 'activeUsers' }, { name: 'eventCount' }],
+          metrics: [
+            { name: 'activeUsers' },
+            { name: 'eventCount' },
+            { name: 'screenPageViews' } // Include Page Views
+          ],
           dimensions: [
             { name: 'eventName' },
             { name: 'pagePath' },
@@ -76,10 +80,16 @@ class GoogleAnalyticsClient {
         return row?.metricValues?.[metricIndex]?.value || '0';
       };
   
+      // Separate metric for page views
+      const pageViewsRow = rows.find((row) => row.dimensionValues?.[0]?.value === 'page_loaded');
+      const pageViews = parseInt(pageViewsRow?.metricValues?.[1]?.value || '0');
+  
       const metrics = {
+        
         visitors: parseInt(getMetricValue('page_loaded')),
         spins: parseInt(getMetricValue('spin_completed')),
         conversions: parseInt(getMetricValue('prize_claimed')),
+        pageVisited: pageViews, // Include Page Views metric
         spinConversionRate:
           (parseInt(getMetricValue('spin_completed')) /
             parseInt(getMetricValue('page_loaded'))) *
@@ -94,10 +104,12 @@ class GoogleAnalyticsClient {
         visitors: 0,
         spins: 0,
         conversions: 0,
+        pageVisited: 0, // Default value for Page Visited
         spinConversionRate: 0,
       };
     }
   }
+  
   
   
   
